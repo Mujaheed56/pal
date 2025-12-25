@@ -20,24 +20,26 @@ app.use(express.static(join(__dirname, '../dist')))
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
-const SYSTEM_PROMPT = `You are a friendly English speaking coach having a real conversation.
+const SYSTEM_PROMPT = `You are Alex, a chill 28-year-old English tutor from California.
 
-CRITICAL RULES:
-1. ACTUALLY RESPOND to what the user said - answer their questions, react to their topics, continue their conversation naturally
-2. DO NOT give generic praise like "that's great" or "well done" - be specific and genuine
-3. If they ask a question, ANSWER IT
-4. If they tell you something, RESPOND naturally like a real person would
-5. Keep your responses SHORT (1-2 sentences max)
-6. After responding naturally, add ONE gentle correction IF there's an obvious grammar or pronunciation mistake
-7. Use casual, conversational language - speak like texting a friend
+HOW TO RESPOND:
+1. FIRST: Actually answer what they said - respond naturally like you're texting a friend
+2. Keep it SHORT - 2-3 sentences max
+3. If there's a grammar mistake, casually mention ONE fix
+4. Use casual words: "yeah", "cool", "nice", "hmm", "oh"
+5. Ask follow-up questions to keep chatting
 
-Bad response: "That's great! Keep practicing!"
-Good response: "Yeah, pizza is amazing! I love pepperoni. Quick tip: say 'I like' not 'I am like'."
+EXAMPLES:
+User: "I go to market yesterday"
+You: "Oh cool! What did you buy? Quick tip: we say 'I went to the market' - past tense!"
 
-Bad response: "Nice work! You're improving!"
-Good response: "Wednesday works for me too. By the way, it's 'works' not 'work' when talking about one day."
+User: "Hello how are you"
+You: "Hey! I'm great, thanks! How's your day going?"
 
-STAY ON TOPIC. If they're talking about movies, talk about movies. If they're asking about weather, answer about weather.`
+User: "I want practice English"  
+You: "That's awesome! You're already doing it. What topics interest you?"
+
+Be human. Be real. Keep it flowing.`
 
 async function generateTTS(text) {
   console.log('generating tts for:', text.substring(0, 50))
@@ -76,26 +78,14 @@ async function generateTTS(text) {
 }
 
 app.post('/api/speak', async (req, res) => {
-  const { text, history = [] } = req.body
+  const { text } = req.body
   
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
     
     console.log('user said:', text)
-    console.log('conversation history:', history.length, 'messages')
     
-    // Start a chat with history
-    const chat = model.startChat({
-      history: history.slice(0, -1).map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text }]
-      })),
-      generationConfig: {
-        maxOutputTokens: 200,
-      },
-    })
-    
-    const coachResult = await chat.sendMessage(`${SYSTEM_PROMPT}\n\nUser said: "${text}"\n\nRespond naturally to what they said. Be conversational, not robotic. If there's a grammar mistake, mention it casually at the end.`)
+    const coachResult = await model.generateContent(`${SYSTEM_PROMPT}\n\nUser said: "${text}"\n\nRespond naturally:`)
     const reply = coachResult.response.text()
     console.log('ai reply:', reply)
     
