@@ -72,17 +72,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { text } = req.body
+  const { text, history = [] } = req.body
   
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
     
     console.log('user said:', text)
+    console.log('conversation history:', history.length, 'messages')
     
-    const coachResult = await model.generateContent([
-      SYSTEM_PROMPT,
-      `User said: "${text}"\n\nProvide a friendly response with feedback.`
-    ])
+    // Start a chat with history
+    const chat = model.startChat({
+      history: history.slice(0, -1).map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.text }]
+      })),
+      generationConfig: {
+        maxOutputTokens: 200,
+      },
+    })
+    
+    const coachResult = await chat.sendMessage(`${SYSTEM_PROMPT}\n\nUser said: "${text}"\n\nProvide a friendly response with feedback based on our conversation history.`)
     const reply = coachResult.response.text()
     console.log('ai reply:', reply)
     

@@ -119,17 +119,20 @@ function App() {
     setTalking(true)
     
     // add user msg
-    setMsgs(prev => [...prev, { 
-      role: 'user', 
-      text 
-    }])
+    const newUserMsg = { role: 'user', text }
+    const updatedMsgs = [...msgs, newUserMsg]
+    setMsgs(updatedMsgs)
     
     try {
       console.log('sending to:', `${import.meta.env.VITE_API_URL}/speak`)
+      console.log('sending history:', updatedMsgs.length, 'messages')
       const res = await fetch(`${import.meta.env.VITE_API_URL}/speak`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ 
+          text,
+          history: updatedMsgs
+        })
       })
       
       console.log('response status:', res.status)
