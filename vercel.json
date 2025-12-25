@@ -8,15 +8,12 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/api/speak",
       "dest": "backend/server.js"
     },
     {
       "src": "/(.*)",
       "dest": "backend/server.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }

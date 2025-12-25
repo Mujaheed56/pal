@@ -110,8 +110,14 @@ app.get('*', (req, res) => {
   res.sendFile(join(__dirname, '../dist/index.html'))
 })
 
-const PORT = process.env.PORT || 5000
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`server running on ${PORT}`)
-  console.log(`share this link: http://localhost:${PORT}`)
-})
+// export for vercel
+export default app
+
+// local server
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`server running on ${PORT}`)
+    console.log(`share this link: http://localhost:${PORT}`)
+  })
+}
